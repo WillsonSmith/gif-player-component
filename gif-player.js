@@ -17,18 +17,33 @@ class GifPlayer extends LitElement {
     super();
     this.playing = true;
     this.currentFrame = 0;
+    this.frames = [];
+
+    let start;
+
+    this.animationFrame = (timestamp) => {
+      if (start === undefined) {
+        start = timestamp;
+      }
+      const elapsed = timestamp - start;
+      if (this.playing) {
+        this.renderFrame();
+      }
+      requestAnimationFrame(this.animationFrame);
+    };
+    requestAnimationFrame(this.animationFrame);
   }
 
   connectedCallback() {
     super.connectedCallback();
-    this.addEventListener("mouseenter", this.startPlaying);
-    this.addEventListener("mouseleave", this.stopPlaying);
+    this.addEventListener("mouseenter", this.play);
+    this.addEventListener("mouseleave", this.pause);
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    this.removeEventListener("mouseenter", this.startPlaying);
-    this.removeEventListener("mouseleave", this.stopPlaying);
+    this.removeEventListener("mouseenter", this.play);
+    this.removeEventListener("mouseleave", this.pause);
   }
 
   firstUpdated() {
@@ -41,12 +56,21 @@ class GifPlayer extends LitElement {
     return html`<canvas></canvas>`;
   }
 
-  startPlaying() {
+  play() {
     this.playing = true;
   }
 
-  stopPlaying() {
+  pause() {
     this.playing = false;
+  }
+
+  renderFrame() {
+    if (!this.frames.length) return;
+    if (this.currentFrame === this.frames.length) {
+      this.currentFrame = 0;
+    }
+    this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
+    this.currentFrame = this.currentFrame + 1;
   }
 
   loadSource(url) {
@@ -60,7 +84,8 @@ class GifPlayer extends LitElement {
         this.width = width;
         this.height = height;
         this.frames = frames;
-        this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
+        this.renderFrame(this.currentFrame);
+        // this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
       })
       .catch((error) => console.log(error));
   }
