@@ -34,17 +34,17 @@ class GifPlayer extends LitElement {
     requestAnimationFrame(this.animationFrame);
   }
 
-  connectedCallback() {
-    super.connectedCallback();
-    this.addEventListener("mouseenter", this.play);
-    this.addEventListener("mouseleave", this.pause);
-  }
+  // connectedCallback() {
+  //   super.connectedCallback();
+  //   this.addEventListener("mouseenter", this.play);
+  //   this.addEventListener("mouseleave", this.pause);
+  // }
 
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    this.removeEventListener("mouseenter", this.play);
-    this.removeEventListener("mouseleave", this.pause);
-  }
+  // disconnectedCallback() {
+  //   super.disconnectedCallback();
+  //   this.removeEventListener("mouseenter", this.play);
+  //   this.removeEventListener("mouseleave", this.pause);
+  // }
 
   firstUpdated() {
     this.canvas = this.renderRoot.querySelector("canvas");
