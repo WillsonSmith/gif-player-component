@@ -17,6 +17,7 @@ class GifPlayer extends LitElement {
   static get properties() {
     return {
       src: { type: String },
+      alt: { type: String },
       autoplay: { type: Boolean },
       play: { type: Function },
       pause: { type: Function },
@@ -42,6 +43,7 @@ class GifPlayer extends LitElement {
   firstUpdated() {
     this.canvas = this.renderRoot.querySelector("canvas");
     this.context = this.canvas.getContext("2d");
+    this.canvas.setAttribute("role", "img");
     this.loadSource(this.src).then(() => {
       if (this.autoplay) this.play();
     });
@@ -55,6 +57,10 @@ class GifPlayer extends LitElement {
     if (changedProperties.has("height")) {
       this.canvas.height = this.height;
       this.renderFrame(false);
+    }
+
+    if (changedProperties.has("alt")) {
+      this.canvas.setAttribute("aria-label", this.alt);
     }
   }
 
@@ -108,6 +114,9 @@ class GifPlayer extends LitElement {
     this.width = width;
     this.height = height;
     this.frames = frames;
+    if (!this.alt) {
+      this.alt = url;
+    }
     this.renderFrame();
   }
 }

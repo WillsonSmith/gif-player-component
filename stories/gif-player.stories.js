@@ -32,6 +32,7 @@ const Template = () => {
     <div>
       <div>
         <gif-player
+          alt="deal with it cat"
           src="https://raw.githubusercontent.com/WillsonSmith/gifs/master/gifs/deal-with-it-cat.gif"
         ></gif-player>
       </div>
