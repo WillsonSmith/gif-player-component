@@ -4,9 +4,13 @@ import { GifReader } from "omggif";
 class GifPlayer extends LitElement {
   static get styles() {
     return css`
+      :host {
+        display: inline-block;
+      }
       canvas {
-        max-width: 100%;
-        max-height: 100%;
+        display: block;
+        width: 100%;
+        height: 100%;
       }
     `;
   }
