@@ -37,6 +37,12 @@ const Template = () => {
       </div>
       <button @click=${() => togglePlaying(true)}>play</button>
       <button @click=${() => togglePlaying(false)}>pause</button>
+
+      <div>
+        <img
+          src="https://raw.githubusercontent.com/WillsonSmith/gifs/master/gifs/deal-with-it-cat.gif"
+        />
+      </div>
     </div>
   `;
 };

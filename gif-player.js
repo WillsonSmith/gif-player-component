@@ -13,6 +13,7 @@ class GifPlayer extends LitElement {
   static get properties() {
     return {
       src: { type: String },
+      autoplay: { type: Boolean },
       play: { type: Function },
       pause: { type: Function },
       frames: { attribute: false, type: Array },
@@ -25,7 +26,6 @@ class GifPlayer extends LitElement {
 
   constructor() {
     super();
-    this.playing = true;
     this.currentFrame = 0;
     this.frames = [];
     this.step = this.step();
@@ -38,7 +38,9 @@ class GifPlayer extends LitElement {
   firstUpdated() {
     this.canvas = this.renderRoot.querySelector("canvas");
     this.context = this.canvas.getContext("2d");
-    this.loadSource(this.src);
+    this.loadSource(this.src).then(() => {
+      if (this.autoplay) this.play();
+    });
   }
 
   updated(changedProperties) {
