@@ -59,14 +59,10 @@ class GifPlayer extends LitElement {
       this.canvas.height = this.height;
       this.renderFrame(false);
     }
-
-    if (changedProperties.has("alt")) {
-      this.canvas.setAttribute("aria-label", this.alt);
-    }
   }
 
   render() {
-    return html`<canvas></canvas>`;
+    return html`<canvas aria-label=${this.alt}></canvas>`;
   }
 
   play() {
