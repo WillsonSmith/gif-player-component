@@ -44,7 +44,6 @@ class GifPlayer extends LitElement {
   firstUpdated() {
     this.canvas = this.renderRoot.querySelector("canvas");
     this.context = this.canvas.getContext("2d");
-    this.canvas.setAttribute("role", "img");
     this.loadSource(this.src).then(() => {
       if (this.autoplay) this.play();
     });
@@ -62,7 +61,7 @@ class GifPlayer extends LitElement {
   }
 
   render() {
-    return html`<canvas aria-label=${this.alt}></canvas>`;
+    return html`<canvas role="img" aria-label=${this.alt}></canvas>`;
   }
 
   play() {
