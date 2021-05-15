@@ -5,13 +5,13 @@ class GifPlayer extends LitElement {
   static get properties() {
     return {
       src: { type: String },
-      playing: { type: Boolean },
-      width: { type: Number },
-      height: { type: Number },
-      currentFrame: { type: Number },
-      frames: { type: Array },
       play: { type: Function },
       pause: { type: Function },
+      frames: { attribute: false, type: Array },
+      playing: { attribute: false, type: Boolean },
+      width: { attribute: false, type: Number },
+      height: { attribute: false, type: Number },
+      currentFrame: { attribute: false, type: Number },
     };
   }
 
@@ -20,26 +20,11 @@ class GifPlayer extends LitElement {
     this.playing = true;
     this.currentFrame = 0;
     this.frames = [];
-
-    let previousTimestamp;
-    this.animationFrame = (timestamp) => {
-      if (!previousTimestamp) {
-        previousTimestamp = timestamp;
-      }
-
-      const delta = timestamp - previousTimestamp;
-      const delay = this.frames[this.currentFrame]?.delay;
-
-      if (this.playing && delay && delta > delay) {
-        previousTimestamp = timestamp;
-        this.renderFrame();
-      }
-      requestAnimationFrame(this.animationFrame);
-    };
-    requestAnimationFrame(this.animationFrame);
-
+    this.step = this.step();
     this.play = this.play.bind(this);
     this.pause = this.pause.bind(this);
+    this.renderFrame = this.renderFrame.bind(this);
+    this.loadSource = this.loadSource.bind(this);
   }
 
   firstUpdated() {
@@ -51,9 +36,11 @@ class GifPlayer extends LitElement {
   updated(changedProperties) {
     if (changedProperties.has("width")) {
       this.canvas.width = this.width;
+      this.renderFrame(false);
     }
     if (changedProperties.has("height")) {
       this.canvas.height = this.height;
+      this.renderFrame(false);
     }
   }
 
@@ -62,36 +49,52 @@ class GifPlayer extends LitElement {
   }
 
   play() {
+    if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
+    this.animationFrame = requestAnimationFrame(this.step);
     this.playing = true;
   }
 
   pause() {
     this.playing = false;
+    if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
   }
 
-  renderFrame() {
+  step() {
+    let previousTimestamp;
+    return (timestamp) => {
+      if (!previousTimestamp) previousTimestamp = timestamp;
+      const delta = timestamp - previousTimestamp;
+      const delay = this.frames[this.currentFrame]?.delay;
+      if (this.playing && delay && delta > delay) {
+        previousTimestamp = timestamp;
+        this.renderFrame();
+      }
+      this.animationFrame = requestAnimationFrame(this.step);
+    };
+  }
+
+  renderFrame(progress = true) {
     if (!this.frames.length) return;
     if (this.currentFrame === this.frames.length - 1) {
       this.currentFrame = 0;
     }
     this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
-    this.currentFrame = this.currentFrame + 1;
+    if (progress) {
+      this.currentFrame = this.currentFrame + 1;
+    }
   }
 
-  loadSource(url) {
-    fetch(url)
-      .then((response) => response.arrayBuffer())
-      .then((buffer) => new Uint8Array(buffer))
-      .then((uInt8Array) => new GifReader(uInt8Array))
-      .then((gif) => framesFromGif(gif))
-      .then((frameset) => {
-        const { width, height, frames } = frameset;
-        this.width = width;
-        this.height = height;
-        this.frames = frames;
-        this.renderFrame(this.currentFrame);
-      })
-      .catch((error) => console.log(error));
+  async loadSource(url) {
+    const response = await fetch(url);
+    const buffer = await response.arrayBuffer();
+    const uInt8Array = new Uint8Array(buffer);
+    const gifReader = new GifReader(uInt8Array);
+    const gif = framesFromGif(gifReader);
+    const { width, height, frames } = gif;
+    this.width = width;
+    this.height = height;
+    this.frames = frames;
+    this.renderFrame();
   }
 }
 
@@ -114,7 +117,7 @@ function framesFromGif(gif) {
     gif.decodeAndBlitFrameRGBA(i, imageData.data);
   }
 
-  return Promise.resolve({ width: gif.width, height: gif.height, frames });
+  return { width: gif.width, height: gif.height, frames };
 }
 
 customElements.define("gif-player", GifPlayer);
