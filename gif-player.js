@@ -89,7 +89,7 @@ class GifPlayer extends LitElement {
     const buffer = await response.arrayBuffer();
     const uInt8Array = new Uint8Array(buffer);
     const gifReader = new GifReader(uInt8Array);
-    const gif = framesFromGif(gifReader);
+    const gif = gifData(gifReader);
     const { width, height, frames } = gif;
     this.width = width;
     this.height = height;
@@ -98,26 +98,34 @@ class GifPlayer extends LitElement {
   }
 }
 
-function framesFromGif(gif) {
+function gifData(gif) {
+  const frames = Array.from(frameDetails(gif));
+  return { width: gif.width, height: gif.height, frames };
+}
+
+function* frameDetails(gifReader) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
-  const frameCount = gif.numFrames();
-  const frames = new Array(frameCount);
+  const frameCount = gifReader.numFrames();
+
+  let previousFrame;
 
   for (let i = 0; i < frameCount; i++) {
-    const frameInfo = gif.frameInfo(i);
-    const imageData = context.createImageData(gif.width, gif.height);
+    const frameInfo = gifReader.frameInfo(i);
+    const imageData = context.createImageData(
+      gifReader.width,
+      gifReader.height
+    );
     if (i > 0 && frameInfo.disposal < 2) {
-      imageData.data.set(new Uint8ClampedArray(frames[i - 1].data.data));
+      imageData.data.set(new Uint8ClampedArray(previousFrame.data.data));
     }
-    frames[i] = {
+    gifReader.decodeAndBlitFrameRGBA(i, imageData.data);
+    previousFrame = {
       data: imageData,
-      delay: gif.frameInfo(i).delay * 10,
+      delay: gifReader.frameInfo(i).delay * 10,
     };
-    gif.decodeAndBlitFrameRGBA(i, imageData.data);
+    yield previousFrame;
   }
-
-  return { width: gif.width, height: gif.height, frames };
 }
 
 customElements.define("gif-player", GifPlayer);
