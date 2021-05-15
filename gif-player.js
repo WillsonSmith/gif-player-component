@@ -1,7 +1,15 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, css } from "lit";
 import { GifReader } from "omggif";
 
 class GifPlayer extends LitElement {
+  static get styles() {
+    return css`
+      canvas {
+        max-width: 100%;
+        max-height: 100%;
+      }
+    `;
+  }
   static get properties() {
     return {
       src: { type: String },
@@ -107,7 +115,6 @@ function* frameDetails(gifReader) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   const frameCount = gifReader.numFrames();
-
   let previousFrame;
 
   for (let i = 0; i < frameCount; i++) {
