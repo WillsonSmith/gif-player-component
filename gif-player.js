@@ -10,6 +10,8 @@ class GifPlayer extends LitElement {
       height: { type: Number },
       currentFrame: { type: Number },
       frames: { type: Array },
+      play: { type: Function },
+      pause: { type: Function },
     };
   }
 
@@ -19,37 +21,40 @@ class GifPlayer extends LitElement {
     this.currentFrame = 0;
     this.frames = [];
 
-    let start;
-
+    let previousTimestamp;
     this.animationFrame = (timestamp) => {
-      if (start === undefined) {
-        start = timestamp;
+      if (!previousTimestamp) {
+        previousTimestamp = timestamp;
       }
-      const elapsed = timestamp - start;
-      if (this.playing) {
+
+      const delta = timestamp - previousTimestamp;
+      const delay = this.frames[this.currentFrame]?.delay;
+
+      if (this.playing && delay && delta > delay) {
+        previousTimestamp = timestamp;
         this.renderFrame();
       }
       requestAnimationFrame(this.animationFrame);
     };
     requestAnimationFrame(this.animationFrame);
+
+    this.play = this.play.bind(this);
+    this.pause = this.pause.bind(this);
   }
-
-  // connectedCallback() {
-  //   super.connectedCallback();
-  //   this.addEventListener("mouseenter", this.play);
-  //   this.addEventListener("mouseleave", this.pause);
-  // }
-
-  // disconnectedCallback() {
-  //   super.disconnectedCallback();
-  //   this.removeEventListener("mouseenter", this.play);
-  //   this.removeEventListener("mouseleave", this.pause);
-  // }
 
   firstUpdated() {
     this.canvas = this.renderRoot.querySelector("canvas");
     this.context = this.canvas.getContext("2d");
     this.loadSource(this.src);
+  }
+
+  updated(changedProperties) {
+    if (changedProperties.has("width")) {
+      this.canvas.width = this.width;
+    }
+    if (changedProperties.has("height")) {
+      this.canvas.height = this.height;
+    }
   }
 
   render() {
@@ -66,7 +71,7 @@ class GifPlayer extends LitElement {
 
   renderFrame() {
     if (!this.frames.length) return;
-    if (this.currentFrame === this.frames.length) {
+    if (this.currentFrame === this.frames.length - 1) {
       this.currentFrame = 0;
     }
     this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
@@ -85,7 +90,6 @@ class GifPlayer extends LitElement {
         this.height = height;
         this.frames = frames;
         this.renderFrame(this.currentFrame);
-        // this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
       })
       .catch((error) => console.log(error));
   }

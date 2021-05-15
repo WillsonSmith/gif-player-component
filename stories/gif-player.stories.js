@@ -11,6 +11,17 @@ export default {
 };
 
 const Template = () => {
+  let el = document.querySelector("gif-player");
+
+  function togglePlaying(value) {
+    el = document.querySelector("gif-player");
+    if (!value) {
+      return el.pause();
+    }
+    if (value) {
+      return el.play();
+    }
+  }
   return html`
     <style>
       body {
@@ -19,9 +30,13 @@ const Template = () => {
       }
     </style>
     <div>
-      <gif-player
-        src="https://raw.githubusercontent.com/WillsonSmith/gifs/master/gifs/deal-with-it-cat.gif"
-      ></gif-player>
+      <div>
+        <gif-player
+          src="https://raw.githubusercontent.com/WillsonSmith/gifs/master/gifs/deal-with-it-cat.gif"
+        ></gif-player>
+      </div>
+      <button @click=${() => togglePlaying(true)}>play</button>
+      <button @click=${() => togglePlaying(false)}>pause</button>
     </div>
   `;
 };
