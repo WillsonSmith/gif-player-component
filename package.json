@@ -1,16 +1,17 @@
 {
-  "name": "gif-player",
+  "name": "@willson/gif-player",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "A component that emulates video controls for a gif using <canvas>",
+  "main": "gif-player.js",
+  "module": "gif-player.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["gif", "player"],
+  "author": "Willson Smith",
+  "license": "MIT",
   "dependencies": {
     "lit": "*",
     "omggif": "^1.0.10"
