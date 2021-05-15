@@ -9,7 +9,10 @@
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
   },
-  "keywords": ["gif", "player"],
+  "keywords": [
+    "gif",
+    "player"
+  ],
   "author": "Willson Smith",
   "license": "MIT",
   "dependencies": {
@@ -24,5 +27,13 @@
     "@storybook/web-components": "^6.2.9",
     "babel-loader": "^8.2.2",
     "lit-html": "^1.4.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WillsonSmith/gif-player-component.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WillsonSmith/gif-player-component/issues"
+  },
+  "homepage": "https://github.com/WillsonSmith/gif-player-component#readme"
 }
