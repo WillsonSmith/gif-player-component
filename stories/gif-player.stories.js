@@ -13,6 +13,11 @@ export default {
 const Template = () => {
   let el = document.querySelector("gif-player");
 
+  function restart() {
+    el = document.querySelector("gif-player");
+    el.restart();
+  }
+
   function togglePlaying(value) {
     el = document.querySelector("gif-player");
     if (!value) {
@@ -38,6 +43,7 @@ const Template = () => {
       </div>
       <button @click=${() => togglePlaying(true)}>play</button>
       <button @click=${() => togglePlaying(false)}>pause</button>
+      <button @click=${restart}>restart</button>
 
       <div>
         <img

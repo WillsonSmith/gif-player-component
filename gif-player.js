@@ -21,17 +21,18 @@ class GifPlayer extends LitElement {
       autoplay: { type: Boolean },
       play: { type: Function },
       pause: { type: Function },
+      restart: { type: Function },
+      currentFrame: { type: Number },
       frames: { attribute: false, type: Array },
       playing: { attribute: false, type: Boolean },
       width: { attribute: false, type: Number },
       height: { attribute: false, type: Number },
-      currentFrame: { attribute: false, type: Number },
     };
   }
 
   constructor() {
     super();
-    this.currentFrame = 0;
+    this.currentFrame = 1;
     this.frames = [];
     this.step = this.step();
     this.play = this.play.bind(this);
@@ -79,6 +80,16 @@ class GifPlayer extends LitElement {
     if (this.animationFrame) cancelAnimationFrame(this.animationFrame);
   }
 
+  restart() {
+    this.currentFrame = 1;
+    if (this.playing) {
+      this.play();
+    } else {
+      this.pause();
+      this.renderFrame(false);
+    }
+  }
+
   step() {
     let previousTimestamp;
     return (timestamp) => {
@@ -98,6 +109,7 @@ class GifPlayer extends LitElement {
     if (this.currentFrame === this.frames.length - 1) {
       this.currentFrame = 0;
     }
+
     this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
     if (progress) {
       this.currentFrame = this.currentFrame + 1;
@@ -117,7 +129,7 @@ class GifPlayer extends LitElement {
     if (!this.alt) {
       this.alt = url;
     }
-    this.renderFrame();
+    this.renderFrame(false);
   }
 }
 
