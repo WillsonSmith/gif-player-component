@@ -10,7 +10,7 @@ export default {
   component: "gif-player",
 };
 
-const Template = () => {
+const Template = (args) => {
   let el = document.querySelector("gif-player");
 
   function restart() {
@@ -36,10 +36,7 @@ const Template = () => {
     </style>
     <div>
       <div>
-        <gif-player
-          alt="deal with it cat"
-          src="https://raw.githubusercontent.com/WillsonSmith/gifs/master/gifs/deal-with-it-cat.gif"
-        ></gif-player>
+        <gif-player alt="deal with it cat" src=${args.src}></gif-player>
       </div>
       <button @click=${() => togglePlaying(true)}>play</button>
       <button @click=${() => togglePlaying(false)}>pause</button>
@@ -49,3 +46,7 @@ const Template = () => {
 };
 
 export const Basic = Template.bind({});
+Basic.args = {
+  src:
+    "https://raw.githubusercontent.com/WillsonSmith/gifs/master/gifs/deal-with-it-cat.gif",
+};

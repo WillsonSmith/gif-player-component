@@ -16,6 +16,7 @@
   "author": "Willson Smith",
   "license": "MIT",
   "dependencies": {
+    "gifuct-js": "^2.1.1",
     "lit": "*",
     "omggif": "^1.0.10"
   },

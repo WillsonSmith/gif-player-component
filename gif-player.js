@@ -1,5 +1,6 @@
 import { LitElement, html, css } from "lit";
 import { GifReader } from "omggif";
+import { parseGIF, decompressFrames } from "gifuct-js";
 
 class GifPlayer extends LitElement {
   static get styles() {
@@ -32,7 +33,7 @@ class GifPlayer extends LitElement {
 
   constructor() {
     super();
-    this.currentFrame = 1;
+    this.currentFrame = 0;
     this.frames = [];
     this.step = this.step();
     this.play = this.play.bind(this);
@@ -76,7 +77,7 @@ class GifPlayer extends LitElement {
   }
 
   restart() {
-    this.currentFrame = 1;
+    this.currentFrame = 0;
     if (this.playing) {
       this.play();
     } else {
@@ -104,8 +105,8 @@ class GifPlayer extends LitElement {
     if (this.currentFrame === this.frames.length - 1) {
       this.currentFrame = 0;
     }
-
-    this.context.putImageData(this.frames[this.currentFrame].data, 0, 0);
+    const frame = this.frames[this.currentFrame];
+    this.context.putImageData(frame.image, 0, 0);
     if (progress) {
       this.currentFrame = this.currentFrame + 1;
     }
@@ -114,9 +115,9 @@ class GifPlayer extends LitElement {
   async loadSource(url) {
     const response = await fetch(url);
     const buffer = await response.arrayBuffer();
-    const uInt8Array = new Uint8Array(buffer);
-    const gifReader = new GifReader(uInt8Array);
-    const gif = gifData(gifReader);
+    const parsedGif = parseGIF(buffer);
+    const decompressedFrames = decompressFrames(parsedGif, true);
+    const gif = gifData(decompressedFrames);
     const { width, height, frames } = gif;
     this.width = width;
     this.height = height;
@@ -133,28 +134,43 @@ function gifData(gif) {
   return { width: gif.width, height: gif.height, frames };
 }
 
-function* frameDetails(gifReader) {
+function* frameDetails(frames) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
-  const frameCount = gifReader.numFrames();
   let previousFrame;
-
-  for (let i = 0; i < frameCount; i++) {
-    const frameInfo = gifReader.frameInfo(i);
-    const imageData = context.createImageData(
-      gifReader.width,
-      gifReader.height
-    );
-    if (i > 0 && frameInfo.disposal < 2) {
-      imageData.data.set(new Uint8ClampedArray(previousFrame.data.data));
-    }
-    gifReader.decodeAndBlitFrameRGBA(i, imageData.data);
-    previousFrame = {
-      data: imageData,
-      delay: gifReader.frameInfo(i).delay * 10,
-    };
+  for (const frame of frames) {
+    const {
+      delay,
+      patch,
+      disposalType,
+      dims: { width, height },
+    } = frame;
+    const imageData = context.createImageData(width, height);
+    console.log(patch);
+    imageData.data.set(patch);
+    previousFrame = { image: imageData, delay, clear: disposalType === 2 };
     yield previousFrame;
   }
+  // const frameCount = gifReader.numFrames();
+  // let previousFrame;
+
+  // for (let i = 0; i < frameCount; i++) {
+  //   const frameInfo = gifReader.frameInfo(i);
+  //   const imageData = context.createImageData(
+  //     gifReader.width,
+  //     gifReader.height
+  //   );
+  //   if (i > 0 && frameInfo.disposal < 2) {
+  //     imageData.data.set(new Uint8ClampedArray(previousFrame.data.data));
+  //   }
+  //   // this is slow ~180-200ms
+  //   gifReader.decodeAndBlitFrameRGBA(i, imageData.data);
+  //   previousFrame = {
+  //     data: imageData,
+  //     delay: gifReader.frameInfo(i).delay * 10,
+  //   };
+  //   yield previousFrame;
+  // }
 }
 
 customElements.define("gif-player", GifPlayer);
