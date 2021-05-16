@@ -116,8 +116,7 @@ class GifPlayer extends LitElement {
     const response = await fetch(url);
     const buffer = await response.arrayBuffer();
     const parsedGif = parseGIF(buffer);
-    const decompressedFrames = decompressFrames(parsedGif, true);
-    const gif = gifData(decompressedFrames);
+    const gif = gifData(parsedGif);
     const { width, height, frames } = gif;
     this.width = width;
     this.height = height;
@@ -130,14 +129,18 @@ class GifPlayer extends LitElement {
 }
 
 function gifData(gif) {
-  const frames = Array.from(frameDetails(gif));
-  return { width: gif.width, height: gif.height, frames };
+  const decompressedFrames = decompressFrames(gif, true);
+  const {
+    lsd: { width, height },
+  } = gif;
+  const frames = Array.from(frameDetails(decompressedFrames));
+  return { width, height, frames };
 }
 
 function* frameDetails(frames) {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
-  let previousFrame;
+  let imageData;
   for (const frame of frames) {
     const {
       delay,
@@ -145,32 +148,16 @@ function* frameDetails(frames) {
       disposalType,
       dims: { width, height },
     } = frame;
-    const imageData = context.createImageData(width, height);
-    console.log(patch);
-    imageData.data.set(patch);
-    previousFrame = { image: imageData, delay, clear: disposalType === 2 };
-    yield previousFrame;
+    if (!imageData || disposalType < 2) {
+      imageData = context.createImageData(width, height);
+      imageData.data.set(patch);
+    }
+    context.putImageData(imageData, 0, 0);
+    yield {
+      image: imageData,
+      delay,
+    };
   }
-  // const frameCount = gifReader.numFrames();
-  // let previousFrame;
-
-  // for (let i = 0; i < frameCount; i++) {
-  //   const frameInfo = gifReader.frameInfo(i);
-  //   const imageData = context.createImageData(
-  //     gifReader.width,
-  //     gifReader.height
-  //   );
-  //   if (i > 0 && frameInfo.disposal < 2) {
-  //     imageData.data.set(new Uint8ClampedArray(previousFrame.data.data));
-  //   }
-  //   // this is slow ~180-200ms
-  //   gifReader.decodeAndBlitFrameRGBA(i, imageData.data);
-  //   previousFrame = {
-  //     data: imageData,
-  //     delay: gifReader.frameInfo(i).delay * 10,
-  //   };
-  //   yield previousFrame;
-  // }
 }
 
 customElements.define("gif-player", GifPlayer);
