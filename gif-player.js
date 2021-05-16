@@ -133,28 +133,41 @@ function gifData(gif) {
   const {
     lsd: { width, height },
   } = gif;
-  const frames = Array.from(frameDetails(decompressedFrames));
+  const frames = Array.from(frameDetails(decompressedFrames, width, height));
   return { width, height, frames };
 }
 
-function* frameDetails(frames) {
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  let imageData;
+function* frameDetails(frames, width, height) {
+  const currentFrameCanvas = document.createElement("canvas");
+  const currentFrameCanvasContext = currentFrameCanvas.getContext("2d");
+  const combinedFrameCanvas = document.createElement("canvas");
+  const combinedFrameCanvasContext = combinedFrameCanvas.getContext("2d");
+  currentFrameCanvas.width = width;
+  currentFrameCanvas.height = height;
+  combinedFrameCanvas.width = width;
+  combinedFrameCanvas.height = height;
+
   for (const frame of frames) {
-    const {
-      delay,
-      patch,
-      disposalType,
-      dims: { width, height },
-    } = frame;
-    if (!imageData || disposalType < 2) {
-      imageData = context.createImageData(width, height);
-      imageData.data.set(patch);
+    const { delay, patch, disposalType } = frame;
+
+    /** Create new ImageData for the current frame */
+    const imageData = currentFrameCanvasContext.createImageData(width, height);
+
+    /** Set imageData to the new frame's patch */
+    imageData.data.set(patch, 0, 0);
+
+    // if disposalType 2 -> clear canvas
+    /** If disposalType is 2, clear the final frame */
+    if (disposalType === 2) {
+      combinedFrameCanvasContext.clearRect(0, 0, width, height);
     }
-    context.putImageData(imageData, 0, 0);
+
+    /** Assemble the final frame */
+    currentFrameCanvasContext.putImageData(imageData, 0, 0);
+    /** Draw the new data to the combined canvas */
+    combinedFrameCanvasContext.drawImage(currentFrameCanvas, 0, 0);
     yield {
-      image: imageData,
+      image: combinedFrameCanvasContext.getImageData(0, 0, width, height),
       delay,
     };
   }
