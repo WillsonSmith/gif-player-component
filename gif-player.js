@@ -129,7 +129,7 @@ class GifPlayer extends LitElement {
 }
 
 function gifData(gif) {
-  const decompressedFrames = decompressFrames(gif, true);
+  const decompressedFrames = decompressFrames(gif);
   const {
     lsd: { width, height },
   } = gif;
@@ -148,8 +148,9 @@ function* frameDetails(frames, width, height) {
   combinedFrameCanvas.height = height;
 
   for (const frame of frames) {
-    const { delay, patch, disposalType } = frame;
-
+    const { delay, pixels, disposalType } = frame;
+    const patch = getPatch(frame);
+    console.log(patch);
     /** Create new ImageData for the current frame */
     const imageData = currentFrameCanvasContext.createImageData(width, height);
 
@@ -171,6 +172,81 @@ function* frameDetails(frames, width, height) {
       delay,
     };
   }
+}
+
+async function getPatch(frame) {
+  const worker = patchWorker();
+  const pixelBuffer = new Uint8Array(frame.pixels).buffer;
+  const colorTableBuffer = new Uint8Array(frame.colorTable).buffer;
+  const transparentIndexBuffer = new Uint8Array(frame.transparentIndex).buffer;
+  const patchResponse = await worker.postMessage(
+    {
+      aTopic: "returned_buffer",
+      pixelBuffer,
+      colorTableBuffer,
+      transparentIndexBuffer,
+    },
+    [pixelBuffer, colorTableBuffer]
+  );
+  const {
+    data: { patch },
+  } = patchResponse;
+  return patch;
+}
+
+class InlineWorker {
+  constructor() {}
+
+  postMessage(message) {
+    return new Promise((resolve, reject) => {
+      this.worker.onmessage = (message) => {
+        resolve(message);
+      };
+      this.worker.postMessage(message);
+    });
+  }
+
+  create(fn) {
+    const blob = new Blob(["self.onmessage =", fn.toString()], {
+      type: "text/javascript",
+    });
+    const url = URL.createObjectURL(blob);
+    this.worker = new Worker(url);
+    return this;
+  }
+}
+function patchWorker() {
+  function workerFunction(message) { {
+    sendWorkerArrBuff(message);
+    function sendWorkerArrBuff(message) {
+      const {
+        data: { pixelBuffer, colorTableBuffer, transparentIndexBuffer },
+      } = message;
+
+      const pixels = new Uint8Array(pixelBuffer).buffer;
+      const colorTable = new Uint8Array(colorTableBuffer).buffer;
+      const transparentIndex = new Uint8Array(transparentIndexBuffer).buffer;
+      const patch = new generatePatch(pixels, colorTable, transparentIndex);
+      self.postMessage({ aTopic: "returned_buffer", patch }, [patch]);
+    }
+
+    function generatePatch(pixels, colorTable, transparentIndex) {
+      var totalPixels = pixels.length;
+      var patchData = new Uint8ClampedArray(totalPixels * 4);
+
+      for (var i = 0; i < totalPixels; i++) {
+        var pos = i * 4;
+        var colorIndex = pixels[i];
+        var color = colorTable[colorIndex] || [0, 0, 0];
+        patchData[pos] = color[0];
+        patchData[pos + 1] = color[1];
+        patchData[pos + 2] = color[2];
+        patchData[pos + 3] = colorIndex !== transparentIndex ? 255 : 0;
+      }
+      return patchData.buffer;
+    }
+  }
+  return new InlineWorker().create(
 }
 
 customElements.define("gif-player", GifPlayer);
